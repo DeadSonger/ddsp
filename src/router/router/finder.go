@@ -3,7 +3,7 @@ package router
 import (
 	"crypto/md5"
 	"encoding/binary"
-
+	"sort"
 	"storage"
 )
 
@@ -63,15 +63,22 @@ func (h *MD5) Hash(k storage.RecordID, node storage.ServiceAddr) uint64 {
 // NodesFinder содержит методы и опции для нахождения узлов,
 // на которых должна храниться запись с данным ключом.
 type NodesFinder struct {
-	// TODO: implement
+	hasher Hasher
 }
 
 // NewNodesFinder creates NodesFinder instance with given Hasher.
 //
 // NewNodesFinder создает NodesFinder с данным Hasher.
 func NewNodesFinder(h Hasher) NodesFinder {
-	// TODO: implement
-	return NodesFinder{}
+	return NodesFinder{hasher: h}
+}
+
+
+func min(i, j int) int {
+	if i < j {
+		return i
+	}
+	return j
 }
 
 // NodesFind returns list of nodes where record with associated key k should be stored.
@@ -82,6 +89,27 @@ func NewNodesFinder(h Hasher) NodesFinder {
 // Возвращается не больше чем storage.ReplicationFactor nodes.
 // Возвращаемые nodes выбираются из передаваемых nodes.
 func (nf NodesFinder) NodesFind(k storage.RecordID, nodes []storage.ServiceAddr) []storage.ServiceAddr {
-	// TODO: implement
-	return nil
+
+	type helper struct {
+		hash uint64
+		addr storage.ServiceAddr
+	}
+	
+	helpers := make([]helper, len(nodes))
+	for i, addr := range nodes {
+		helpers[i] = helper{nf.hasher.Hash(k, addr), addr}
+	}
+
+	sort.Slice(helpers, func(i, j int) bool {
+			if helpers[i].hash == helpers[j].hash {
+				return helpers[i].addr > helpers[j].addr
+			}
+			return helpers[i].hash > helpers[j].hash
+		})
+
+	ret := make([]storage.ServiceAddr, min(len(nodes), storage.ReplicationFactor))
+	for i := 0; i < len(ret); i++ {
+		ret[i] = helpers[i].addr
+	}
+	return ret
 }
