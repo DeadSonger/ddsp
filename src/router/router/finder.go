@@ -73,7 +73,6 @@ func NewNodesFinder(h Hasher) NodesFinder {
 	return NodesFinder{hasher: h}
 }
 
-
 func min(i, j int) int {
 	if i < j {
 		return i
@@ -94,18 +93,18 @@ func (nf NodesFinder) NodesFind(k storage.RecordID, nodes []storage.ServiceAddr)
 		hash uint64
 		addr storage.ServiceAddr
 	}
-	
+
 	helpers := make([]helper, len(nodes))
 	for i, addr := range nodes {
 		helpers[i] = helper{nf.hasher.Hash(k, addr), addr}
 	}
 
 	sort.Slice(helpers, func(i, j int) bool {
-			if helpers[i].hash == helpers[j].hash {
-				return helpers[i].addr > helpers[j].addr
-			}
-			return helpers[i].hash > helpers[j].hash
-		})
+		if helpers[i].hash == helpers[j].hash {
+			return helpers[i].addr > helpers[j].addr
+		}
+		return helpers[i].hash > helpers[j].hash
+	})
 
 	ret := make([]storage.ServiceAddr, min(len(nodes), storage.ReplicationFactor))
 	for i := 0; i < len(ret); i++ {

@@ -1,10 +1,10 @@
 package node
 
 import (
-	"time"
-	"sync"
 	router "router/client"
 	"storage"
+	"sync"
+	"time"
 )
 
 // Config stores configuration for a Node service.
@@ -29,8 +29,8 @@ type Config struct {
 // Node is a Node service.
 type Node struct {
 	sync.Mutex
-	cfg Config
-	data map[storage.RecordID][]byte
+	cfg        Config
+	data       map[storage.RecordID][]byte
 	lifeChanel chan byte
 }
 
@@ -75,7 +75,7 @@ func (node *Node) Stop() {
 func (node *Node) Put(k storage.RecordID, d []byte) error {
 	node.Lock()
 	defer node.Unlock()
-	if _,exist := node.data[k]; exist {
+	if _, exist := node.data[k]; exist {
 		return storage.ErrRecordExists
 	}
 	node.data[k] = d
@@ -90,7 +90,7 @@ func (node *Node) Put(k storage.RecordID, d []byte) error {
 func (node *Node) Del(k storage.RecordID) error {
 	node.Lock()
 	defer node.Unlock()
-	if _,exist := node.data[k]; exist {
+	if _, exist := node.data[k]; exist {
 		delete(node.data, k)
 		return nil
 	}
@@ -105,7 +105,7 @@ func (node *Node) Del(k storage.RecordID) error {
 func (node *Node) Get(k storage.RecordID) ([]byte, error) {
 	node.Lock()
 	defer node.Unlock()
-	if _,exist := node.data[k]; exist {
+	if _, exist := node.data[k]; exist {
 		return node.data[k], nil
 	}
 	return nil, storage.ErrRecordNotFound

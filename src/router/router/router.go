@@ -1,9 +1,9 @@
 package router
 
 import (
-	"time"
-	"sync"
 	"storage"
+	"sync"
+	"time"
 )
 
 // Config stores configuration for a Router service.
@@ -32,7 +32,7 @@ type Config struct {
 // Router is a router service.
 type Router struct {
 	sync.Mutex
-	cfg Config
+	cfg           Config
 	hearbeatTimes map[storage.ServiceAddr]time.Time
 }
 
@@ -63,7 +63,7 @@ func New(cfg Config) (*Router, error) {
 func (r *Router) Heartbeat(node storage.ServiceAddr) error {
 	r.Lock()
 	defer r.Unlock()
-	if _,exist := r.hearbeatTimes[node]; exist {
+	if _, exist := r.hearbeatTimes[node]; exist {
 		r.hearbeatTimes[node] = time.Now()
 		return nil
 	}
@@ -80,7 +80,7 @@ func (r *Router) Heartbeat(node storage.ServiceAddr) error {
 func (r *Router) NodesFind(k storage.RecordID) ([]storage.ServiceAddr, error) {
 	nodes := r.cfg.NodesFinder.NodesFind(k, r.cfg.Nodes)
 	ret := make([]storage.ServiceAddr, 0)
-	for _,node := range nodes {
+	for _, node := range nodes {
 		r.Lock()
 		if time.Now().Sub(r.hearbeatTimes[node]) < r.cfg.ForgetTimeout {
 			ret = append(ret, node)

@@ -1,11 +1,11 @@
 package frontend
 
 import (
-	"time"
-	"sync"
 	rclient "router/client"
 	"router/router"
 	"storage"
+	"sync"
+	"time"
 )
 
 // InitTimeout is a timeout to wait after unsuccessful List() request to Router.
@@ -38,8 +38,8 @@ type Config struct {
 
 // Frontend is a frontend service.
 type Frontend struct {
-	cfg Config
-	nodesList []storage.ServiceAddr
+	cfg          Config
+	nodesList    []storage.ServiceAddr
 	initControll sync.Once
 }
 
@@ -49,7 +49,6 @@ type Frontend struct {
 func New(cfg Config) *Frontend {
 	return &Frontend{cfg: cfg}
 }
-
 
 func (fe *Frontend) updateWork(k storage.RecordID, task func(node storage.ServiceAddr) error) error {
 	nodes, err := fe.cfg.RC.NodesFind(fe.cfg.Router, k)
@@ -70,7 +69,7 @@ func (fe *Frontend) updateWork(k storage.RecordID, task func(node storage.Servic
 	}
 
 	for range nodes {
-		errors[<- errorsChanel]++
+		errors[<-errorsChanel]++
 	}
 
 	for err, num := range errors {
@@ -127,7 +126,7 @@ func (fe *Frontend) Get(k storage.RecordID) ([]byte, error) {
 	}
 
 	type result struct {
-		data []byte
+		data     []byte
 		retError error
 	}
 
@@ -135,7 +134,7 @@ func (fe *Frontend) Get(k storage.RecordID) ([]byte, error) {
 	results := make(map[string]int)
 	resultsChanel := make(chan result, len(nodes))
 
-	for _,node := range nodes {
+	for _, node := range nodes {
 		go func(node storage.ServiceAddr) {
 			data, err := fe.cfg.NC.Get(node, k)
 			resultsChanel <- result{data, err}
@@ -143,7 +142,7 @@ func (fe *Frontend) Get(k storage.RecordID) ([]byte, error) {
 	}
 
 	for range nodes {
-		res := <- resultsChanel
+		res := <-resultsChanel
 		if res.retError == nil {
 			results[string(res.data)]++
 			if results[string(res.data)] == storage.MinRedundancy {
